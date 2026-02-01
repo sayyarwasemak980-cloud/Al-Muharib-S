@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المحارب س: مغامرة المحيط الأحمر</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #000; }
+        #game-container { width: 100vw; height: 100vh; }
+        /* تنسيق صندوق الإدخال للمرحلة السادسة */
+        .game-input {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 12px; font-size: 20px; border-radius: 8px;
+            border: 2px solid #e74c3c; outline: none; z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <script>
+        // هنا نضع إعدادات اللعبة والمتغيرات العالمية
+        let immunityScore = 0;
+
+        class MainMenu extends Phaser.Scene {
+            constructor() { super('MainMenu'); }
+            preload() {
+                // ملاحظة: تأكد من وجود المجلد assets بجانب ملف index.html
+                this.load.image('bg_interface', 'assets/واجهة.png');
+                this.load.audio('bgMusic', 'assets/sound 1.mp3');
+                this.load.audio('click', 'assets/sound 2.mp3'); // نستخدمه كصوت تفاعل أيضاً
+            }
+            create() {
+                this.add.image(window.innerWidth/2, window.innerHeight/2, 'bg_interface').setDisplaySize(window.innerWidth, window.innerHeight);
+                
+                let startBtn = this.add.text(window.innerWidth/2, window.innerHeight * 0.8, 'ابدأ اللعبة', {
+                    fontSize: '42px', fill: '#fff', backgroundColor: '#e74c3c', padding: { x: 20, y: 10 }
+                }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+                startBtn.on('pointerdown', () => {
+                    this.sound.play('click');
+                    // هنا يتم الانتقال للفيديو الأول كما في تعليماتك
+                    console.log("بداية اللعبة...");
+                    this.scene.start('Level1'); 
+                });
+
+                // تشغيل موسيقى الخلفية
+                if (!this.sound.get('bgMusic')) {
+                    this.sound.play('bgMusic', { loop: true, volume: 0.15 });
+                }
+            }
+        }
+
+        // إعدادات المحرك
+        const config = {
+            type: Phaser.AUTO,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            parent: 'game-container',
+            physics: { default: 'arcade', arcade: { debug: false } },
+            scene: [MainMenu] // أضف باقي المشاهد (Level1, Quiz, BossFight...) هنا بنفس الطريقة
+        };
+
+        const game = new Phaser.Game(config);
+        
+        window.addEventListener('resize', () => {
+            game.scale.resize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
