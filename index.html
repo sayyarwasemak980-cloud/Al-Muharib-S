@@ -43,6 +43,15 @@
             width: 100%; height: 100%; object-fit: cover; 
             z-index: 1;
         }
+
+        /* Fallback background if image fails */
+        .img-fallback {
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 5rem;
+        }
         
         .content-overlay {
             position: relative; z-index: 10;
@@ -59,6 +68,7 @@
             cursor: pointer; border-radius: 50px;
             z-index: 100; margin-top: 20px;
             transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
         .btn:active { transform: scale(0.9); }
@@ -121,19 +131,21 @@
 </head>
 <body>
 
-    <!-- Audio Assets -->
-    <audio id="bg-music" loop><source src="sound 1.mp3" type="audio/mpeg"></audio>
-    <audio id="click-sound"><source src="sound 2.mp3" type="audio/mpeg"></audio>
-    <audio id="typing-sound" loop><source src="sound 2.mp3" type="audio/mpeg"></audio>
+    <!-- Audio Assets - تم التأكد من مطابقة أسماء ملفاتك -->
+    <audio id="bg-music" loop preload="auto"><source src="sound 1.mp3" type="audio/mpeg"></audio>
+    <audio id="click-sound" preload="auto"><source src="sound 2.mp3" type="audio/mpeg"></audio>
+    <audio id="typing-sound" loop preload="auto"><source src="sound 2.mp3" type="audio/mpeg"></audio>
 
     <div id="game-container">
         <div id="hud">🛡️ المناعة المعلوماتية: <span id="ammo-count">0</span></div>
 
         <!-- المشهد 1: البداية -->
         <div id="scene-start" class="scene active">
-            <img src="واجهة.png" class="full-screen-media" onerror="this.style.display='none'">
+            <!-- إذا لم تظهر الصورة سيظهر رمز الدرع كخلفية -->
+            <div class="full-screen-media img-fallback">🛡️</div>
+            <img src="واجهة.png" class="full-screen-media" alt="">
             <div class="content-overlay">
-                <h1 style="font-size: 3.5rem; color: #ffd700; text-shadow: 2px 2px #000;">المحارب س</h1>
+                <h1 style="font-size: 3.5rem; color: #ffd700; text-shadow: 2px 2px 10px #000;">المحارب س</h1>
                 <button class="btn" onclick="startGame()">دخول المحيط الأحمر</button>
             </div>
         </div>
@@ -147,38 +159,39 @@
 
         <!-- المشهد 3: قصة المحارب -->
         <div id="scene-story" class="scene">
-            <img src="قصة المحارب س.png" class="full-screen-media">
+            <div class="full-screen-media img-fallback">📖</div>
+            <img src="قصة المحارب س.png" class="full-screen-media" alt="">
             <div class="content-overlay">
                 <button class="btn" style="position:absolute; bottom:40px" onclick="playLevelIntro(1)">استمرار</button>
             </div>
         </div>
 
-        <!-- المشهد 4: مقدمة المرحلة (الفيديوهات تظهر هنا قبل اللعب) -->
+        <!-- المشهد 4: مقدمة المرحلة -->
         <div id="scene-level-intro" class="scene">
             <video id="level-intro-video" class="full-screen-media" onended="startActualGameplay()">
                 <source src="" type="video/mp4">
             </video>
-            <div id="skip-intro" style="position:absolute; bottom:20px; left:20px; z-index:100; cursor:pointer; background:rgba(0,0,0,0.5); padding:5px 15px; border-radius:20px;" onclick="startActualGameplay()">تخطي العرض >></div>
+            <div id="skip-intro" style="position:absolute; bottom:20px; left:20px; z-index:100; cursor:pointer; background:rgba(0,0,0,0.7); padding:8px 20px; border-radius:20px; border:1px solid #fff;" onclick="startActualGameplay()">تخطي العرض >></div>
         </div>
 
         <!-- المشهد 5: ساحة اللعب الفعلية -->
         <div id="scene-gameplay" class="scene fire-bg">
-            <div id="level-announcement" style="font-size:3rem; color:gold; z-index:100;">المرحلة <span id="lvl-num">1</span></div>
+            <div id="level-announcement" style="font-size:3rem; color:gold; z-index:100; text-shadow: 0 0 15px #000;">المرحلة <span id="lvl-num">1</span></div>
         </div>
 
         <!-- المشهد 6: حصن التنين -->
         <div id="scene-boss" class="scene">
-            <!-- فيديو التنين هنا إذا أردت أو خلفية ثابتة -->
             <div id="boss-ui">⏱️ الوقت: <span id="boss-timer">120</span></div>
             <div class="content-overlay">
-                <h2 style="color:red; background:rgba(0,0,0,0.5); padding:10px;">دمر حصن التنين قبل فوات الأوان!</h2>
+                <h2 style="color:red; background:rgba(0,0,0,0.7); padding:10px; border-radius:10px;">دمر حصن التنين قبل فوات الأوان!</h2>
                 <div id="fort-grid"></div>
             </div>
         </div>
 
         <!-- المشهد 7: الحقيقة -->
         <div id="scene-truth" class="scene">
-            <img src="حقيقة المحارب س.png" class="full-screen-media">
+            <div class="full-screen-media img-fallback">💡</div>
+            <img src="حقيقة المحارب س.png" class="full-screen-media" alt="">
         </div>
 
         <!-- المشهد 8: الرسالة الختامية -->
@@ -211,9 +224,14 @@
             isGameOver: false 
         };
 
+        // وظيفة تشغيل الصوت مع معالجة خطأ التشغيل التلقائي
         function playSfx(id, loop = false) {
             const s = document.getElementById(id);
-            if (s) { s.loop = loop; s.currentTime = 0; s.play().catch(()=>{}); }
+            if (s) { 
+                s.loop = loop; 
+                s.currentTime = 0; 
+                s.play().catch(e => console.log("Audio play blocked: ", e)); 
+            }
         }
 
         function stopSfx(id) {
@@ -227,41 +245,39 @@
         }
 
         function startGame() {
-            playSfx('bg-music');
+            // تشغيل الموسيقى عند أول ضغطة زر لتجنب حظر المتصفح
+            playSfx('bg-music', true);
             switchScene('scene-video-intro');
-            document.getElementById('vid-intro').play();
+            const v = document.getElementById('vid-intro');
+            v.play().catch(() => endVideoIntro());
         }
 
         function endVideoIntro() {
             switchScene('scene-story');
         }
 
-        // وظيفة تشغيل مقدمة المرحلة
         function playLevelIntro(num) {
             state.level = num;
-            document.getElementById('hud').style.display = 'none'; // إخفاء المعلومات أثناء الفيديو
+            document.getElementById('hud').style.display = 'none';
             
             const introVideo = document.getElementById('level-intro-video');
             introVideo.src = `level ${num}.mp4`;
             switchScene('scene-level-intro');
             introVideo.play().catch(() => {
-                // إذا لم يوجد فيديو للمرحلة، ابدأ اللعب مباشرة
                 startActualGameplay();
             });
         }
 
-        // بدء اللعب الفعلي بعد انتهاء فيديو المقدمة
         function startActualGameplay() {
-            document.getElementById('level-intro-video').pause();
+            const v = document.getElementById('level-intro-video');
+            v.pause();
             document.getElementById('hud').style.display = 'block';
             document.getElementById('lvl-num').innerText = state.level;
             switchScene('scene-gameplay');
             
-            // تنظيف أي عناصر سابقة
             const stageTimer = setInterval(spawnItem, 800);
             state.intervals.push(stageTimer);
             
-            // مدة المرحلة اللعب الفعلي 15 ثانية
             setTimeout(() => {
                 clearInterval(stageTimer);
                 if(state.level < 3) {
@@ -288,7 +304,10 @@
             const anim = setInterval(() => {
                 top += 7;
                 item.style.top = top + 'px';
-                if(top > window.innerHeight) { clearInterval(anim); item.remove(); }
+                if(top > window.innerHeight) { 
+                    clearInterval(anim); 
+                    item.remove(); 
+                }
             }, 20);
 
             item.onclick = (e) => {
@@ -372,7 +391,8 @@
                     target.innerHTML += '<span class="heart-icon">❤️</span>';
                     setTimeout(() => {
                         switchScene('scene-win-video');
-                        document.getElementById('vid-win').play();
+                        const wv = document.getElementById('vid-win');
+                        if(wv) wv.play();
                     }, 5000);
                 }
             }
