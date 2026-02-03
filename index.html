@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>المحارب س: مغامرة المحيط الأحمر</title>
+    <style>
+        /* --- تنسيقات عامة --- */
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Cairo', sans-serif;
+            background-color: #220000;
+            color: white;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, #500000, #200000);
+            overflow: hidden;
+        }
+
+        /* --- واجهة المستخدم العلوية (الذخيرة) --- */
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 15px;
+            border: 2px solid #fff;
+            font-size: 1.2rem;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 0 10px #fff;
+            transition: transform 0.2s;
+        }
+
+        .pulse-anim {
+            animation: pulse-scale 0.2s ease-in-out;
+        }
+
+        @keyframes pulse-scale {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* --- الصور والفيديو --- */
+        img, video {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .full-screen-media {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* --- الأزرار --- */
+        .btn {
+            background: linear-gradient(45deg, #ff9800, #ff5722);
+            color: white;
+            border: 2px solid white;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            border-radius: 50px;
+            margin-top: 20px;
+            font-family: 'Cairo', sans-serif;
+            transition: transform 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .skip-btn {
+            position: absolute; 
+            bottom: 20px; 
+            opacity: 0.5; 
+            font-size: 1rem; 
+            padding: 10px 20px;
+        }
+
+        /* --- عناصر اللعب --- */
+        .falling-item {
+            position: absolute;
+            cursor: pointer;
+            z-index: 50;
+            animation-timing-function: linear;
+        }
+
+        .wbc {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            color: #333;
+        }
+        
+        .bomb {
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #000, #333);
+            border-radius: 50%;
+            border: 2px solid red;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .bomb::after {
+            content: '💣';
+            font-size: 24px;
+        }
+
+        /* النقاط العائمة عند النقر */
+        .floating-score {
+            position: absolute;
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.5rem;
+            pointer-events: none;
+            z-index: 100;
+            animation: floatUp 1s forwards;
+            text-shadow: 0 0 5px #000;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+
+        /* بطاقات المعلومات */
+        .info-card-item {
+            width: 80px;
+            height: 100px;
+            background-color: #ffd700;
+            border: 3px solid #fff;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 0 15px gold;
+            font-size: 2rem;
+        }
+
+        #info-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 600px;
+            background: white;
+            color: black;
+            padding: 20px;
+            border-radius: 15px;
+            z-index: 2000;
+            display: none;
+            border: 5px solid #2196F3;
+            text-align: center;
+        }
+        #info-popup img {
+            max-height: 60vh;
+        }
+
+        /* --- الأسئلة --- */
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+            width: 80%;
+            max-width: 500px;
+        }
+        .option-btn {
+            background: #fff;
+            color: #333;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .option-btn:hover { background: #f0f0f0; }
+
+        input[type="text"] {
+            padding: 15px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            border: none;
+            width: 80%;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        /* --- معركة الزعيم --- */
+        #boss-stats {
+            display: flex;
+            justify-content: space-between;
+            width: 90%;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        #fort-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .brick {
+            width: 50px;
+            height: 50px;
+            background-color: #d32f2f;
+            border: 2px solid #b71c1c;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .brick:active { transform: scale(0.9); }
+        .brick.damaged-1 { background-color: #f44336; }
+        .brick.damaged-2 { background-color: #ef9a9a; }
+        .brick.destroyed { visibility: hidden; pointer-events: none; }
+
+        /* --- النهاية --- */
+        #typewriter-text {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 2rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            text-shadow: 2px 2px 4px #000;
+            direction: rtl;
+        }
+
+        .fire-bg {
+            background: linear-gradient(to top, #ff9800, #ff5722, #200000);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- موسيقى الخلفية والمؤثرات -->
+    <audio id="bg-music" loop>
+        <source src="Sound 1.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="click-sound">
+        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQAAAAAAA==" type="audio/wav"> 
+    </audio>
+    <audio id="type-sound">
+        <source src="sound 2.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="game-container">
+        
+        <!-- شريط المعلومات العلوي -->
+        <div id="hud">
+            <span>🛡️ ذخيرة المناعة المعلوماتية: <span id="ammo-count">0</span></span>
+        </div>
+
+        <!-- نافذة عرض بطاقة المعلومات -->
+        <div id="info-popup">
+            <img id="popup-img" src="" alt="معلومة">
+            <p style="margin-top:10px; font-weight:bold;">انقر للإغلاق واكسب 10 نقاط!</p>
+        </div>
+
+        <!-- 1. الواجهة الرئيسية -->
+        <div id="scene-start" class="scene active">
+            <img src="واجهة.jpg" alt="واجهة المحارب س" class="full-screen-media">
+            <button class="btn" style="position: absolute; bottom: 50px;" onclick="startGame()">البدء</button>
+        </div>
+
+        <!-- 2. فيديو البداية -->
+        <div id="scene-video-intro" class="scene">
+            <video id="vid-intro" class="full-screen-media" onended="endVideo('scene-story')">
+                <source src="First.mp4" type="video/mp4">
+            </video>
+            <button class="btn skip-btn" onclick="endVideo('scene-story')">تخطي</button>
+        </div>
+
+        <!-- 3. قصة المحارب -->
+        <div id="scene-story" class="scene">
+            <img src="قصة المحارب س.jpg" alt="قصة المحارب س" class="full-screen-media">
+            <!-- الانتقال تلقائي سيكون -->
+        </div>
+
+        <!-- 4. فيديو المراحل -->
+        <div id="scene-level-video" class="scene">
+            <video id="level-vid-player" class="full-screen-media">
+                <source src="" type="video/mp4">
+            </video>
+            <button class="btn skip-btn" onclick="endLevelVideo()">تخطي</button>
+        </div>
+
+        <!-- 5. تعريف المرحلة (صورة مؤقتة) -->
+        <div id="scene-level-intro" class="scene">
+            <img id="level-intro-img" src="" class="full-screen-media">
+        </div>
+
+        <!-- 6. ساحة اللعب -->
+        <div id="scene-gameplay" class="scene">
+            <!-- العناصر تضاف برمجياً -->
+        </div>
+
+        <!-- 7. الأسئلة -->
+        <div id="scene-quiz-1" class="scene">
+            <h2>يذكرني المحيط الأحمر بـ:</h2>
+            <div class="quiz-options">
+                <button class="option-btn" onclick="checkAnswer(1, false)">المحيط الأطلسي</button>
+                <button class="option-btn" onclick="checkAnswer(1, true)">الدم</button>
+                <button class="option-btn" onclick="checkAnswer(1, false)">المحيط الهادي</button>
+            </div>
+        </div>
+
+        <div id="scene-quiz-2" class="scene">
+            <h2>يذكرني التنين الذي هاجم المحيط الأحمر بـ:</h2>
+            <div class="quiz-options">
+                <button class="option-btn" onclick="checkAnswer(2, false)">سرطان الدم</button>
+                <button class="option-btn" onclick="checkAnswer(2, false)">اللوكيميا</button>
+                <button class="option-btn" onclick="checkAnswer(2, true)">كلاهما صحيح</button>
+            </div>
+        </div>
+
+        <div id="scene-quiz-3" class="scene">
+            <h2>ما هي هوية المحارب س الحقيقية؟</h2>
+            <input type="text" id="ans-input" placeholder="اكتب إجابتك هنا">
+            <button class="btn" onclick="checkTextAnswer()">تحقق</button>
+        </div>
+
+        <!-- 8. الزعيم -->
+        <div id="scene-boss" class="scene">
+            <div id="boss-stats">
+                <span id="boss-timer">الوقت: 120</span>
+            </div>
+            <img src="تنين.jpg" alt="تنين" style="width: 150px; margin-bottom: 20px;">
+            <div id="fort-container"></div>
+        </div>
+
+        <!-- 9. الفوز والخسارة والنهاية -->
+        <div id="scene-win-video" class="scene">
+            <video id="vid-win" class="full-screen-media" onended="showTruth()">
+                <source src="win.mp4" type="video/mp4">
+            </video>
+        </div>
+
+        <div id="scene-truth" class="scene">
+            <img src="حقيقة المحارب س.jpg" class="full-screen-media">
+            <!-- الانتقال تلقائي -->
+        </div>
+
+        <div id="scene-message" class="scene" style="background: black; justify-content: center;">
+            <div id="typewriter-text"></div>
+        </div>
+
+        <div id="scene-end-video" class="scene">
+            <video id="vid-end" class="full-screen-media" onended="showRestart()">
+                <source src="End.mp4" type="video/mp4">
+            </video>
+            <button id="btn-restart" class="btn" style="display: none; position: absolute; bottom: 50px;" onclick="location.reload()">عودة إلى البداية</button>
+        </div>
+
+        <div id="scene-lose" class="scene">
+            <video id="vid-lose" class="full-screen-media">
+                <source src="lose.mp4" type="video/mp4">
+            </video>
+            <button class="btn" style="position: absolute; bottom: 50px;" onclick="location.reload()">إعادة اللعبة</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- إعدادات اللعبة ---
+        const gameState = {
+            ammo: 0,
+            level: 0,
+            timer: null,
+            gameInterval: null,
+            spawnInterval: null
+        };
+
+        const ASSETS = {
+            levels: {
+                1: { video: 'level 1.mp4', introImg: 'التعريف بالمرحلة الأولى.jpg', cards: ['الذخيرة 1-1.jpg', 'الذخيرة 1-2.jpg', 'الذخيرة 1-3.jpg'] },
+                2: { video: 'level 2.mp4', introImg: 'التعريف بالمرحلة الثانية.jpg', cards: ['الذخيرة 2-1.jpg', 'الذخيرة 2-2.jpg', 'الذخيرة 2-3.jpg'] },
+                3: { video: 'level 3.mp4', introImg: 'التعريف بالمرحلة الثالثة.jpg', cards: ['الذخيرة 3-1.jpg', 'الذخيرة 3-2.jpg', 'الذخيرة 3-3.jpg'] }
+            }
+        };
+
+        const sounds = {
+            bg: document.getElementById('bg-music'),
+            click: document.getElementById('click-sound'),
+            type: document.getElementById('type-sound')
+        };
+
+        function playSound(name) {
+            if (sounds[name]) {
+                sounds[name].currentTime = 0;
+                sounds[name].play().catch(() => {});
+            }
+        }
+
+        function switchScene(id) {
+            document.querySelectorAll('.scene').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // --- بداية اللعبة ---
+        function startGame() {
+            sounds.bg.volume = 0.15;
+            sounds.bg.play().catch(() => {});
+            playSound('click');
+            switchScene('scene-video-intro');
+            document.getElementById('vid-intro').play();
+        }
+
+        function endVideo(nextSceneId) {
+            const vid = document.getElementById('vid-intro');
+            vid.pause();
+            switchScene(nextSceneId);
+            
+            // في مشهد القصة، الانتظار 20 ثانية ثم الانتقال تلقائياً
+            if (nextSceneId === 'scene-story') {
+                setTimeout(() => {
+                    goToLevel(1);
+                }, 20000); // 20 ثانية عرض القصة
+            }
+        }
+
+        // --- إدارة المراحل ---
+        function goToLevel(lvlNum) {
+            gameState.level = lvlNum;
+            document.getElementById('hud').style.display = 'block';
+            
+            if (lvlNum <= 3) {
+                // تشغيل فيديو المرحلة
+                const vidPlayer = document.getElementById('level-vid-player');
+                vidPlayer.src = ASSETS.levels[lvlNum].video;
+                switchScene('scene-level-video');
+                vidPlayer.play();
+                
+                // التأكد من الانتقال التلقائي في حال انتهاء الفيديو
+                vidPlayer.onended = endLevelVideo;
+
+            } else if (lvlNum === 4) {
+                switchScene('scene-quiz-1');
+            } else if (lvlNum === 5) {
+                switchScene('scene-quiz-2');
+            } else if (lvlNum === 6) {
+                switchScene('scene-quiz-3');
+            } else if (lvlNum === 7) {
+                startBossBattle();
+            }
+        }
+
+        function endLevelVideo() {
+            const vid = document.getElementById('level-vid-player');
+            vid.pause();
+            vid.onended = null; // إزالة المستمع لتجنب التكرار
+
+            // عرض صورة التعريف بالمرحلة
+            const img = document.getElementById('level-intro-img');
+            img.src = ASSETS.levels[gameState.level].introImg;
+            switchScene('scene-level-intro');
+
+            // الانتظار 30 ثانية ثم بدء اللعب تلقائياً
+            setTimeout(() => {
+                startGameplay(gameState.level);
+            }, 30000); // 30 ثانية تعريف
+        }
+
+        // --- محرك اللعب ---
+        function startGameplay(level) {
+            switchScene('scene-gameplay');
+            const gameArea = document.getElementById('scene-gameplay');
+            gameArea.innerHTML = ''; 
+
+            if (level === 2) {
+                gameArea.classList.add('fire-bg');
+            } else {
+                gameArea.classList.remove('fire-bg');
+            }
+
+            // مؤقتات اللعب
+            gameState.gameInterval = setInterval(spawnWBC, 800);
+            gameState.spawnInterval = setInterval(spawnBomb, 5000);
+            
+            // جدولة البطاقات
+            setTimeout(() => spawnCard(0), 5000);
+            setTimeout(() => spawnCard(1), 20000);
+            setTimeout(() => spawnCard(2), 35000);
+
+            // إنهاء المرحلة تلقائياً بعد 55 ثانية
+            // (تسمح بوقت كافٍ لآخر بطاقة لتظهر وتختفي)
+            setTimeout(() => {
+                finishCurrentLevel();
+            }, 55000);
+        }
+
+        function createFloatingText(x, y, text, color) {
+            const el = document.createElement('div');
+            el.className = 'floating-score';
+            el.innerText = text;
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            el.style.color = color;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        function updateAmmo(amount, x, y) {
+            gameState.ammo += amount;
+            if (gameState.ammo < 0) gameState.ammo = 0;
+            
+            const hud = document.getElementById('hud');
+            const count = document.getElementById('ammo-count');
+            count.innerText = gameState.ammo;
+            
+            // تأثير بصري على العداد
+            hud.classList.remove('pulse-anim');
+            void hud.offsetWidth; // trigger reflow
+            hud.classList.add('pulse-anim');
+
+            if (x && y) {
+                const color = amount > 0 ? '#4caf50' : '#f44336';
+                const sign = amount > 0 ? '+' : '';
+                createFloatingText(x, y, sign + amount, color);
+            }
+        }
+
+        function spawnWBC() {
+            const el = document.createElement('div');
+            el.className = 'falling-item wbc';
+            el.style.left = Math.random() * 90 + '%';
+            el.style.top = '-60px';
+            el.innerText = 'WBC';
+            
+            document.getElementById('scene-gameplay').appendChild(el);
+
+            let pos = -60;
+            const fall = setInterval(() => {
+                pos += 3; // أسرع قليلاً
+                el.style.top = pos + 'px';
+                if (pos > window.innerHeight) {
+                    clearInterval(fall);
+                    el.remove();
+                }
+            }, 20);
+
+            el.onclick = (e) => {
+                playSound('click');
+                updateAmmo(1, e.clientX, e.clientY);
+                el.remove();
+                clearInterval(fall);
+            };
+        }
+
+        function spawnBomb() {
+            const el = document.createElement('div');
+            el.className = 'falling-item bomb';
+            el.style.left = Math.random() * 90 + '%';
+            el.style.top = '-60px';
+            document.getElementById('scene-gameplay').appendChild(el);
+
+            let pos = -60;
+            const fall = setInterval(() => {
+                pos += 4;
+                el.style.top = pos + 'px';
+                if (pos > window.innerHeight) {
+                    clearInterval(fall);
+                    el.remove();
+                }
+            }, 20);
+
+            el.onclick = (e) => {
+                playSound('click');
+                updateAmmo(-5, e.clientX, e.clientY);
+                el.remove();
+                clearInterval(fall);
+                // وميض أحمر
+                const container = document.getElementById('game-container');
+                container.style.backgroundColor = '#500';
+                setTimeout(() => container.style.backgroundColor = '', 100);
+            };
+        }
+
+        function spawnCard(index) {
+            if (gameState.level > 3) return;
+
+            const cards = ASSETS.levels[gameState.level].cards;
+            const el = document.createElement('div');
+            el.className = 'falling-item info-card-item';
+            el.innerText = '?';
+            el.style.left = (15 + (index * 30)) + '%';
+            el.style.top = '-100px';
+            document.getElementById('scene-gameplay').appendChild(el);
+
+            let pos = -100;
+            const fall = setInterval(() => {
+                pos += 3;
+                el.style.top = pos + 'px';
+                if (pos > window.innerHeight / 3) {
+                    clearInterval(fall);
+                }
+            }, 20);
+
+            // تختفي بعد 10 ثواني
+            const timeout = setTimeout(() => {
+                if (el.parentNode) el.remove();
+            }, 10000 + (pos/2 * 20));
+
+            el.onclick = (e) => {
+                playSound('click');
+                const popup = document.getElementById('info-popup');
+                const popupImg = document.getElementById('popup-img');
+                popupImg.src = cards[index];
+                popup.style.display = 'block';
+                
+                popup.onclick = () => {
+                    popup.style.display = 'none';
+                    updateAmmo(10, window.innerWidth/2, window.innerHeight/2);
+                    el.remove();
+                    clearTimeout(timeout);
+                    popup.onclick = null; // إزالة الحدث
+                };
+            };
+        }
+
+        function finishCurrentLevel() {
+            clearInterval(gameState.gameInterval);
+            clearInterval(gameState.spawnInterval);
+            document.getElementById('scene-gameplay').innerHTML = '';
+            goToLevel(gameState.level + 1);
+        }
+
+        // --- الأسئلة ---
+        function checkAnswer(qNum, isCorrect) {
+            playSound('click');
+            if (isCorrect) {
+                // انتقال تلقائي
+                setTimeout(() => {
+                    goToLevel(qNum === 1 ? 5 : 6);
+                }, 500);
+            } else {
+                alert('حاول مرة أخرى');
+            }
+        }
+
+        function checkTextAnswer() {
+            playSound('click');
+            const ans = document.getElementById('ans-input').value.trim();
+            const validAnswers = ['كريات الدم البيضاء', 'الجهاز المناعي', 'خلايا الدم البيضاء'];
+            
+            if (validAnswers.some(v => v === ans)) {
+                setTimeout(() => goToLevel(7), 500);
+            } else {
+                alert('حاول مرة أخرى');
+            }
+        }
+
+        // --- معركة الزعيم ---
+        function startBossBattle() {
+            switchScene('scene-boss');
+            const container = document.getElementById('fort-container');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < 20; i++) {
+                const brick = document.createElement('div');
+                brick.className = 'brick';
+                brick.dataset.hp = 3;
+                brick.onclick = (e) => hitBrick(brick, e);
+                container.appendChild(brick);
+            }
+
+            let timeLeft = 120;
+            const timerDisplay = document.getElementById('boss-timer');
+            gameState.timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = `الوقت: ${timeLeft}`;
+                if (timeLeft <= 0) {
+                    loseGame();
+                }
+            }, 1000);
+        }
+
+        function hitBrick(brick, e) {
+            if (gameState.ammo <= 0) {
+                loseGame();
+                return;
+            }
+            if (brick.classList.contains('destroyed')) return;
+
+            playSound('click');
+            updateAmmo(-1, e.clientX, e.clientY);
+
+            let hp = parseInt(brick.dataset.hp);
+            hp--;
+            brick.dataset.hp = hp;
+
+            if (hp === 2) brick.classList.add('damaged-1');
+            if (hp === 1) brick.classList.add('damaged-2');
+            if (hp <= 0) {
+                brick.classList.add('destroyed');
+                checkWin();
+            }
+        }
+
+        function checkWin() {
+            const remaining = document.querySelectorAll('.brick:not(.destroyed)').length;
+            if (remaining === 0) {
+                clearInterval(gameState.timer);
+                winGame();
+            }
+        }
+
+        function loseGame() {
+            clearInterval(gameState.timer);
+            const vid = document.getElementById('vid-lose');
+            switchScene('scene-lose');
+            vid.play();
+        }
+
+        function winGame() {
+            const vid = document.getElementById('vid-win');
+            switchScene('scene-win-video');
+            vid.play();
+        }
+
+        function showTruth() {
+            switchScene('scene-truth');
+            // انتقال تلقائي بعد 15 ثانية (وقت كافٍ للقراءة)
+            setTimeout(showFinalMessage, 15000);
+        }
+
+        function showFinalMessage() {
+            switchScene('scene-message');
+            typeWriterEffect();
+        }
+
+        function typeWriterEffect() {
+            const fullText = "من القلب إلى أطفال العالم: عِشتم أصحاء، متفائلين، آمنين";
+            const target = document.getElementById('typewriter-text');
+            target.innerHTML = '';
+            let i = 0;
+
+            function type() {
+                if (i < fullText.length) {
+                    target.innerHTML += fullText.charAt(i);
+                    i++;
+                    playSound('type');
+                    setTimeout(type, 100);
+                } else {
+                    setTimeout(() => {
+                        const newText = target.innerHTML.replace("أطفال", "أبطال");
+                        target.innerHTML = newText;
+                        target.style.color = '#ffd700'; 
+                        
+                        setTimeout(() => {
+                            target.style.transition = "opacity 2s";
+                            target.style.opacity = 0;
+                            setTimeout(playEndVideo, 2000);
+                        }, 10000);
+
+                    }, 1000);
+                }
+            }
+            type();
+        }
+
+        function playEndVideo() {
+            const vid = document.getElementById('vid-end');
+            switchScene('scene-end-video');
+            vid.play();
+        }
+
+        function showRestart() {
+            document.getElementById('btn-restart').style.display = 'block';
+        }
+
+    </script>
+</body>
+</html>
