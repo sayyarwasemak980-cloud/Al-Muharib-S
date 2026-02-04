@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>المحارب س - الإصدار النهائي</title>
+    <title>المحارب س - الإصدار الاحترافي</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
 
@@ -22,10 +22,10 @@
 
         #hud {
             position: absolute; top: 15px; right: 15px;
-            background: rgba(0, 0, 0, 0.5); padding: 8px 18px;
-            border-radius: 20px; border: 1px solid rgba(255, 215, 0, 0.4);
-            font-size: 1.1rem; z-index: 9999; display: none;
-            color: #ffd700; backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.6); padding: 10px 20px;
+            border-radius: 30px; border: 1.5px solid rgba(255, 215, 0, 0.5);
+            font-size: 1.2rem; z-index: 9999; display: none;
+            color: #ffd700; backdrop-filter: blur(5px);
         }
 
         .scene {
@@ -54,83 +54,92 @@
         }
 
         .btn-game {
-            background: rgba(255, 87, 34, 0.8); color: white; border: none;
-            padding: 12px 35px; font-size: 1.3rem;
+            background: rgba(255, 87, 34, 0.9); color: white; border: none;
+            padding: 12px 40px; font-size: 1.4rem;
             cursor: pointer; border-radius: 50px; z-index: 100;
+            box-shadow: 0 0 15px rgba(255, 87, 34, 0.5);
         }
 
         .falling-item {
             position: absolute; cursor: pointer; z-index: 10000;
             display: flex; justify-content: center; align-items: center;
             border-radius: 50%; touch-action: none;
-            font-size: 1.8rem;
+            font-size: 2rem;
         }
 
-        .wbc { width: 55px; height: 55px; background: radial-gradient(circle, #fff, #e0f7fa); border: 2px solid #fff; box-shadow: 0 0 10px #fff; }
-        .info-card { width: 70px; height: 70px; background: radial-gradient(circle, #ffd700, #ff8c00); border: 3px solid #fff; box-shadow: 0 0 15px #ffd700; }
-        .bomb { width: 60px; height: 60px; background: #1a1a1a; border: 2px solid #f44336; box-shadow: 0 0 10px #f44336; }
+        .wbc { width: 60px; height: 60px; background: radial-gradient(circle, #fff, #add8e6); border: 2px solid #fff; box-shadow: 0 0 15px #fff; }
+        .info-card { width: 75px; height: 75px; background: radial-gradient(circle, #ffd700, #ff8c00); border: 3px solid #fff; box-shadow: 0 0 20px #ffd700; }
+        .bomb { width: 65px; height: 65px; background: #000; border: 3px solid #f00; box-shadow: 0 0 15px #f00; }
 
-        #fort-grid { display: grid; grid-template-columns: repeat(5, 60px); gap: 8px; z-index: 100; }
-        .brick { width: 60px; height: 40px; background: #420000; border: 1px solid #ffd700; border-radius: 3px; cursor: pointer; }
+        #fort-grid { display: grid; grid-template-columns: repeat(5, 65px); gap: 10px; z-index: 100; }
+        .brick { width: 65px; height: 45px; background: #500; border: 1px solid gold; border-radius: 4px; cursor: pointer; }
 
-        #typewriter-text { font-size: 1.6rem; color: #ffd700; text-align: center; max-width: 80%; z-index: 100; line-height: 1.6; font-weight: bold; }
-        #skip-btn { position: absolute; bottom: 20px; left: 20px; z-index: 9999; font-size: 0.8rem; opacity: 0.5; cursor: pointer; color: #fff; }
+        #typewriter-text { font-size: 1.8rem; color: #ffd700; text-align: center; max-width: 80%; z-index: 100; line-height: 1.6; }
+        #skip-btn { position: absolute; bottom: 20px; left: 20px; z-index: 9999; font-size: 0.9rem; opacity: 0.7; cursor: pointer; color: #fff; }
     </style>
 </head>
 <body>
 
-    <!-- تم ضبط مستوى الصوت ليكون هادئاً وغير مزعج -->
-    <audio id="bg-music" loop preload="auto"><source src="sound 1.mp3" type="audio/mpeg"></audio>
-    <audio id="final-sfx" preload="auto"><source src="sound 2.mp3" type="audio/mpeg"></audio>
+    <audio id="bg-music" loop><source src="sound 1.mp3" type="audio/mpeg"></audio>
+    <audio id="final-sfx"><source src="sound 2.mp3" type="audio/mpeg"></audio>
 
     <div id="game-container">
-        <div id="hud">🛡️ المناعة: <span id="ammo-count">0</span></div>
+        <div id="hud">🛡️ ذخيرة المناعة المعلوماتية: <span id="ammo-count">0</span></div>
 
+        <!-- البداية -->
         <div id="scene-start" class="scene active">
             <img src="واجهة.png" class="full-screen-media">
             <button class="btn-start" onclick="startGame()">ابدأ</button>
         </div>
 
+        <!-- مقدمة الفيديو -->
         <div id="scene-video-intro" class="scene">
-            <video id="vid-intro" class="full-screen-media" onended="goToStory()" playsinline>
+            <video id="vid-intro" class="full-screen-media" onended="goToStory()">
                 <source src="First.mp4" type="video/mp4">
             </video>
         </div>
 
+        <!-- القصة -->
         <div id="scene-story" class="scene">
             <img src="قصة المحارب س.png" class="full-screen-media">
-            <button class="btn-game" style="position:absolute; bottom:8%;" onclick="playLevelTransition(1)">استمرار</button>
+            <button class="btn-game" style="position:absolute; bottom:10%;" onclick="playLevelTransition(1)">استمرار</button>
         </div>
 
+        <!-- انتقال المراحل (1-6) -->
         <div id="scene-level-intro" class="scene">
-            <video id="level-intro-video" class="full-screen-media" onended="startPlay()" playsinline></video>
+            <video id="level-intro-video" class="full-screen-media" onended="startPlay()"></video>
             <div id="skip-btn" onclick="startPlay()">تخطي >></div>
         </div>
 
+        <!-- اللعب -->
         <div id="scene-gameplay" class="scene">
-            <video id="gameplay-bg" class="full-screen-media" autoplay muted loop style="opacity:0.35;" playsinline></video>
+            <video id="gameplay-bg" class="full-screen-media" autoplay muted loop style="opacity:0.4;"></video>
         </div>
 
+        <!-- الحصن (المرحلة الختامية) -->
         <div id="scene-boss" class="scene">
-            <video class="full-screen-media" autoplay muted loop playsinline><source src="level 3.mp4" type="video/mp4"></video>
+            <video class="full-screen-media" autoplay muted loop><source src="level 6.mp4" type="video/mp4"></video>
             <div id="fort-grid"></div>
         </div>
 
+        <!-- الحقيقة -->
         <div id="scene-truth" class="scene">
             <img src="حقيقة المحارب س.png" class="full-screen-media">
         </div>
 
+        <!-- الرسالة الختامية -->
         <div id="scene-message" class="scene" style="background:#000;">
             <div id="typewriter-text"></div>
         </div>
 
+        <!-- فيديو النهاية -->
         <div id="scene-win" class="scene">
-            <video id="vid-win" class="full-screen-media" playsinline><source src="win.mp4" type="video/mp4"></video>
+            <video id="vid-win" class="full-screen-media"><source src="win.mp4" type="video/mp4"></video>
         </div>
     </div>
 
     <script>
-        const state = { ammo: 0, level: 1, intervals: [] };
+        const state = { ammo: 0, level: 1, intervals: [], maxLevel: 6 };
 
         function switchScene(id) {
             document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
@@ -138,10 +147,9 @@
         }
 
         function startGame() {
-            const bgMusic = document.getElementById('bg-music');
-            bgMusic.volume = 0.3; // ضبط الصوت ليكون منخفضاً (30%)
-            bgMusic.play().catch(() => console.log("Audio waiting for user interaction"));
-            
+            const m = document.getElementById('bg-music');
+            m.volume = 0.3;
+            m.play().catch(()=>{});
             switchScene('scene-video-intro');
             document.getElementById('vid-intro').play();
         }
@@ -154,6 +162,7 @@
             state.level = lvl;
             document.getElementById('hud').style.display = 'none';
             const v = document.getElementById('level-intro-video');
+            // تأكد من وجود ملفات من level 1.mp4 إلى level 6.mp4
             v.src = `level ${lvl}.mp4`;
             switchScene('scene-level-intro');
             v.play().catch(startPlay);
@@ -166,13 +175,21 @@
             bg.src = `level ${state.level}.mp4`;
             switchScene('scene-gameplay');
 
-            const spawnInt = setInterval(spawn, 1000);
+            // تنظيف أي فترات زمنية سابقة
+            state.intervals.forEach(clearInterval);
+            state.intervals = [];
+
+            const spawnInt = setInterval(spawn, 900);
             state.intervals.push(spawnInt);
 
+            // كل مرحلة تستغرق 15 ثانية
             setTimeout(() => {
                 clearInterval(spawnInt);
-                if(state.level < 3) playLevelTransition(state.level + 1);
-                else startBoss();
+                if(state.level < state.maxLevel) {
+                    playLevelTransition(state.level + 1);
+                } else {
+                    startBoss();
+                }
             }, 15000);
         }
 
@@ -181,7 +198,7 @@
             if(!container.classList.contains('active')) return;
 
             const rand = Math.random();
-            let type = 'wbc';
+            let type = 'wbc'; 
             let icon = '⚪';
             
             if(rand > 0.85) { type = 'bomb'; icon = '💣'; }
@@ -189,13 +206,13 @@
 
             const el = document.createElement('div');
             el.className = `falling-item ${type}`;
-            el.style.left = (Math.random() * 75 + 12.5) + 'vw';
+            el.style.left = (Math.random() * 80 + 10) + 'vw';
             el.style.top = '-80px';
             el.innerHTML = icon;
             container.appendChild(el);
 
             let pos = -80;
-            const speed = 3.5;
+            const speed = 3.5 + (state.level * 0.3);
             const anim = setInterval(() => {
                 pos += speed;
                 el.style.top = pos + 'px';
@@ -204,8 +221,8 @@
 
             const hit = (e) => {
                 e.preventDefault();
-                if(type === 'wbc') state.ammo += 1;
-                else if(type === 'info-card') state.ammo += 10;
+                if(type === 'wbc') state.ammo += 1; // نقطة واحدة للكرية
+                else if(type === 'info-card') state.ammo += 10; // 10 نقاط للبطاقة
                 else if(type === 'bomb') state.ammo = Math.max(0, state.ammo - 15);
                 
                 document.getElementById('ammo-count').innerText = state.ammo;
@@ -239,22 +256,24 @@
             document.getElementById('hud').style.display = 'none';
             switchScene('scene-truth');
             setTimeout(() => {
-                // إيقاف موسيقى الخلفية تدريجياً أو مباشرة عند مشهد الرسالة
                 document.getElementById('bg-music').pause();
-                
                 switchScene('scene-message');
                 const text = "من القلب إلى أبطال العالم: عِشتم أصحاء، متفائلين، آمنين.. أنتم الأمل.";
                 const target = document.getElementById('typewriter-text');
                 let i = 0;
-                document.getElementById('final-sfx').play();
+                // تشغيل الصوت 2 حصرياً هنا
+                const finalSfx = document.getElementById('final-sfx');
+                finalSfx.play().catch(()=>{});
+                
                 const type = setInterval(() => {
-                    if(i < text.length) { target.innerHTML += text[i++]; }
-                    else {
+                    if(i < text.length) { 
+                        target.innerHTML += text[i++]; 
+                    } else {
                         clearInterval(type);
                         setTimeout(() => {
                             switchScene('scene-win');
                             document.getElementById('vid-win').play();
-                        }, 4000);
+                        }, 3000);
                     }
                 }, 100);
             }, 5000);
