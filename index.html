@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>المحارب س: المعركة النهائية</title>
+    <title>المحارب س - الإصدار النهائي</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
 
@@ -17,27 +17,22 @@
 
         #game-container {
             position: relative; width: 100vw; height: 100vh;
-            overflow: hidden;
-            background: #000;
+            overflow: hidden; background: #000;
         }
 
-        /* HUD - Immunity Counter */
         #hud {
-            position: absolute; top: 20px; right: 20px;
-            background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(50,50,50,0.8));
-            padding: 15px 25px;
-            border-radius: 50px; border: 3px solid #ffd700;
-            font-size: 1.4rem; z-index: 9999; display: none;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-            font-weight: bold;
-            color: #ffd700;
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(0, 0, 0, 0.5); padding: 8px 18px;
+            border-radius: 20px; border: 1px solid rgba(255, 215, 0, 0.4);
+            font-size: 1.1rem; z-index: 9999; display: none;
+            color: #ffd700; backdrop-filter: blur(4px);
         }
 
         .scene {
             position: absolute; top: 0; left: 0;
             width: 100%; height: 100%; display: none;
             flex-direction: column; justify-content: center;
-            align-items: center; text-align: center;
+            align-items: center;
         }
 
         .active { display: flex; }
@@ -48,196 +43,94 @@
             z-index: 1;
         }
 
-        .content-overlay {
-            position: relative; z-index: 10;
-            width: 100%; height: 100%;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            background: rgba(0,0,0,0.4);
+        .btn-start {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.8); 
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 25px; font-size: 1rem;
+            cursor: pointer; border-radius: 20px;
+            z-index: 100; position: absolute; bottom: 15%;
+            transition: all 0.3s; backdrop-filter: blur(2px);
         }
 
-        .btn {
-            background: linear-gradient(45deg, #ff9800, #ff5722);
-            color: white; border: 3px solid white;
-            padding: 18px 45px; font-size: 1.6rem;
-            cursor: pointer; border-radius: 50px;
-            z-index: 100; margin-top: 20px;
-            transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(255, 87, 34, 0.4);
-            font-weight: bold;
+        .btn-game {
+            background: rgba(255, 87, 34, 0.8); color: white; border: none;
+            padding: 12px 35px; font-size: 1.3rem;
+            cursor: pointer; border-radius: 50px; z-index: 100;
         }
 
-        .btn:hover { transform: scale(1.05); box-shadow: 0 0 25px #ff5722; }
-
-        /* Falling Elements - Highly Visible */
-        .wbc { 
-            width: 80px; height: 80px; 
-            background: radial-gradient(circle, #fff, #ffd700); 
-            border-radius: 50%; box-shadow: 0 0 40px #ffd700;
-            display: flex; justify-content: center; align-items: center; 
-            position: absolute; cursor: pointer; font-size: 40px; 
-            z-index: 10000; /* Extremely high z-index to ensure visibility */
-            border: 3px solid #fff;
-            pointer-events: auto;
-            touch-action: none;
-        }
-        
-        .bomb { 
-            width: 80px; height: 80px; background: #000; 
-            border-radius: 50%; border: 4px solid #ff0000; 
-            position: absolute; cursor: pointer;
-            display: flex; justify-content: center; align-items: center; 
-            z-index: 10000; font-size: 40px;
-            box-shadow: 0 0 30px #ff0000;
-            pointer-events: auto;
-            touch-action: none;
+        .falling-item {
+            position: absolute; cursor: pointer; z-index: 10000;
+            display: flex; justify-content: center; align-items: center;
+            border-radius: 50%; touch-action: none;
+            font-size: 1.8rem;
         }
 
-        /* Boss Scene UI */
-        #boss-timer-container {
-            position: absolute; top: 20px; left: 20px;
-            font-size: 1.5rem; background: rgba(255,0,0,0.8);
-            padding: 15px; border-radius: 15px; border: 2px solid white;
-            z-index: 9999; color: white; font-weight: bold;
-        }
+        .wbc { width: 55px; height: 55px; background: radial-gradient(circle, #fff, #e0f7fa); border: 2px solid #fff; box-shadow: 0 0 10px #fff; }
+        .info-card { width: 70px; height: 70px; background: radial-gradient(circle, #ffd700, #ff8c00); border: 3px solid #fff; box-shadow: 0 0 15px #ffd700; }
+        .bomb { width: 60px; height: 60px; background: #1a1a1a; border: 2px solid #f44336; box-shadow: 0 0 10px #f44336; }
 
-        #fort-grid { 
-            display: grid; grid-template-columns: repeat(5, 70px); 
-            gap: 15px; margin-top: 30px; position: relative; z-index: 100;
-        }
+        #fort-grid { display: grid; grid-template-columns: repeat(5, 60px); gap: 8px; z-index: 100; }
+        .brick { width: 60px; height: 40px; background: #420000; border: 1px solid #ffd700; border-radius: 3px; cursor: pointer; }
 
-        /* Typing & Ending */
-        #typewriter-text { 
-            font-size: 2.2rem; line-height: 1.8; 
-            color: #ffd700; text-shadow: 0 0 15px #000;
-            max-width: 85%; z-index: 100; font-weight: bold;
-        }
-
-        /* Backgrounds */
-        .game-field {
-            background-color: #111;
-            z-index: 5;
-        }
-
-        #skip-intro {
-            position: absolute; bottom: 30px; left: 30px; z-index: 9999;
-            background: rgba(0,0,0,0.8); color: white; padding: 10px 25px;
-            border-radius: 30px; border: 2px solid #ffd700; cursor: pointer;
-            font-weight: bold;
-        }
+        #typewriter-text { font-size: 1.6rem; color: #ffd700; text-align: center; max-width: 80%; z-index: 100; line-height: 1.6; font-weight: bold; }
+        #skip-btn { position: absolute; bottom: 20px; left: 20px; z-index: 9999; font-size: 0.8rem; opacity: 0.5; cursor: pointer; color: #fff; }
     </style>
 </head>
 <body>
 
-    <!-- Audio Assets -->
-    <audio id="bg-music" loop><source src="sound 1.mp3" type="audio/mpeg"></audio>
-    <audio id="click-sound"><source src="sound 2.mp3" type="audio/mpeg"></audio>
-    <audio id="typing-sound" loop><source src="sound 2.mp3" type="audio/mpeg"></audio>
+    <!-- تم ضبط مستوى الصوت ليكون هادئاً وغير مزعج -->
+    <audio id="bg-music" loop preload="auto"><source src="sound 1.mp3" type="audio/mpeg"></audio>
+    <audio id="final-sfx" preload="auto"><source src="sound 2.mp3" type="audio/mpeg"></audio>
 
     <div id="game-container">
         <div id="hud">🛡️ المناعة: <span id="ammo-count">0</span></div>
 
-        <!-- Start Scene -->
         <div id="scene-start" class="scene active">
-            <img src="واجهة.png" class="full-screen-media" onerror="this.style.display='none'">
-            <div class="content-overlay">
-                <h1 style="font-size: 4rem; color: #ffd700; text-shadow: 4px 4px 15px #000; margin:0;">المحارب س</h1>
-                <p style="font-size: 1.5rem; color: #fff; margin-bottom: 20px;">المعركة المعلوماتية الكبرى</p>
-                <button class="btn" onclick="startGame()">دخول المحيط الأحمر</button>
-            </div>
+            <img src="واجهة.png" class="full-screen-media">
+            <button class="btn-start" onclick="startGame()">ابدأ</button>
         </div>
 
-        <!-- Intro Video -->
         <div id="scene-video-intro" class="scene">
-            <video id="vid-intro" class="full-screen-media" onended="goToStory()">
+            <video id="vid-intro" class="full-screen-media" onended="goToStory()" playsinline>
                 <source src="First.mp4" type="video/mp4">
             </video>
-            <div id="skip-intro" onclick="goToStory()">تخطي العرض >></div>
         </div>
 
-        <!-- Story Scene -->
         <div id="scene-story" class="scene">
-            <img src="قصة المحارب س.png" class="full-screen-media" onerror="this.style.display='none'">
-            <div class="content-overlay">
-                <button class="btn" style="position:absolute; bottom:50px" onclick="playLevelIntro(1)">ابدأ الرحلة</button>
-            </div>
+            <img src="قصة المحارب س.png" class="full-screen-media">
+            <button class="btn-game" style="position:absolute; bottom:8%;" onclick="playLevelTransition(1)">استمرار</button>
         </div>
 
-        <!-- Level Transitions -->
         <div id="scene-level-intro" class="scene">
-            <video id="level-intro-video" class="full-screen-media" onended="startActualLevel()">
-                <source src="" type="video/mp4">
-            </video>
-            <div id="skip-intro" onclick="startActualLevel()">تخطي المقدمة >></div>
+            <video id="level-intro-video" class="full-screen-media" onended="startPlay()" playsinline></video>
+            <div id="skip-btn" onclick="startPlay()">تخطي >></div>
         </div>
 
-        <!-- Gameplay Arena -->
-        <div id="scene-gameplay" class="scene game-field">
-            <!-- Background Video for the Stage -->
-            <video id="gameplay-bg-vid" class="full-screen-media" autoplay muted loop style="opacity: 0.5; z-index: 1;">
-                <source src="level 1.mp4" type="video/mp4">
-            </video>
-            <div id="stage-announcer" style="font-size:4rem; color:#ffd700; z-index:100; text-shadow: 0 0 20px #000;">المرحلة <span id="current-lvl-text">1</span></div>
+        <div id="scene-gameplay" class="scene">
+            <video id="gameplay-bg" class="full-screen-media" autoplay muted loop style="opacity:0.35;" playsinline></video>
         </div>
 
-        <!-- Final Boss Battle -->
         <div id="scene-boss" class="scene">
-            <video class="full-screen-media" autoplay muted loop><source src="level 3.mp4" type="video/mp4"></video>
-            <div id="boss-timer-container">⏱️ الوقت: <span id="boss-timer">60</span> ثانية</div>
-            <div class="content-overlay">
-                <h2 style="color:#ffd700; font-size:2.5rem; text-shadow: 0 0 10px #000; margin-bottom:10px;">دمر حصن التنين!</h2>
-                <div id="fort-grid"></div>
-            </div>
+            <video class="full-screen-media" autoplay muted loop playsinline><source src="level 3.mp4" type="video/mp4"></video>
+            <div id="fort-grid"></div>
         </div>
 
-        <!-- The Truth -->
         <div id="scene-truth" class="scene">
             <img src="حقيقة المحارب س.png" class="full-screen-media">
         </div>
 
-        <!-- Ending Message -->
-        <div id="scene-message" class="scene" style="background: #000;">
+        <div id="scene-message" class="scene" style="background:#000;">
             <div id="typewriter-text"></div>
         </div>
 
-        <!-- Win Video -->
-        <div id="scene-win-video" class="scene">
-            <video id="vid-win" class="full-screen-media">
-                <source src="win.mp4" type="video/mp4">
-            </video>
-        </div>
-
-        <!-- Game Over -->
-        <div id="scene-lose" class="scene">
-            <div class="content-overlay">
-                <h1 style="font-size: 4rem; color: red; text-shadow: 0 0 20px #000;">انتهت طاقتك!</h1>
-                <button class="btn" onclick="location.reload()">حاول مرة أخرى</button>
-            </div>
+        <div id="scene-win" class="scene">
+            <video id="vid-win" class="full-screen-media" playsinline><source src="win.mp4" type="video/mp4"></video>
         </div>
     </div>
 
     <script>
-        const state = {
-            ammo: 0,
-            currentLevel: 1,
-            bossTimer: 60,
-            activeIntervals: [],
-            isGameOver: false
-        };
-
-        function playSound(id, loop = false) {
-            const s = document.getElementById(id);
-            if (s) { 
-                s.loop = loop; 
-                s.currentTime = 0; 
-                s.play().catch(()=>{}); 
-            }
-        }
-
-        function stopSound(id) {
-            const s = document.getElementById(id);
-            if (s) s.pause();
-        }
+        const state = { ammo: 0, level: 1, intervals: [] };
 
         function switchScene(id) {
             document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
@@ -245,187 +138,126 @@
         }
 
         function startGame() {
-            playSound('bg-music', true);
+            const bgMusic = document.getElementById('bg-music');
+            bgMusic.volume = 0.3; // ضبط الصوت ليكون منخفضاً (30%)
+            bgMusic.play().catch(() => console.log("Audio waiting for user interaction"));
+            
             switchScene('scene-video-intro');
-            const v = document.getElementById('vid-intro');
-            v.play().catch(goToStory);
+            document.getElementById('vid-intro').play();
         }
 
         function goToStory() {
-            document.getElementById('vid-intro').pause();
             switchScene('scene-story');
         }
 
-        function playLevelIntro(num) {
-            state.currentLevel = num;
+        function playLevelTransition(lvl) {
+            state.level = lvl;
             document.getElementById('hud').style.display = 'none';
-            const introVid = document.getElementById('level-intro-video');
-            introVid.src = `level ${num}.mp4`;
+            const v = document.getElementById('level-intro-video');
+            v.src = `level ${lvl}.mp4`;
             switchScene('scene-level-intro');
-            introVid.play().catch(startActualLevel);
+            v.play().catch(startPlay);
         }
 
-        function startActualLevel() {
+        function startPlay() {
             document.getElementById('level-intro-video').pause();
             document.getElementById('hud').style.display = 'block';
-            document.getElementById('current-lvl-text').innerText = state.currentLevel;
-            
-            // Update gameplay background video
-            const bgVid = document.getElementById('gameplay-bg-vid');
-            bgVid.src = `level ${state.currentLevel}.mp4`;
-            bgVid.play().catch(()=>{});
-
+            const bg = document.getElementById('gameplay-bg');
+            bg.src = `level ${state.level}.mp4`;
             switchScene('scene-gameplay');
-            
-            const announcer = document.getElementById('stage-announcer');
-            announcer.style.visibility = 'visible';
-            setTimeout(() => { announcer.style.visibility = 'hidden'; }, 2000);
 
-            // Spawning logic - Balanced speed
-            const spawner = setInterval(spawnCard, 1000);
-            state.activeIntervals.push(spawner);
+            const spawnInt = setInterval(spawn, 1000);
+            state.intervals.push(spawnInt);
 
-            // Stage duration: 15 seconds
             setTimeout(() => {
-                clearInterval(spawner);
-                if(state.currentLevel < 3) {
-                    playLevelIntro(state.currentLevel + 1);
-                } else {
-                    startBossBattle();
-                }
+                clearInterval(spawnInt);
+                if(state.level < 3) playLevelTransition(state.level + 1);
+                else startBoss();
             }, 15000);
         }
 
-        function spawnCard() {
+        function spawn() {
             const container = document.getElementById('scene-gameplay');
             if(!container.classList.contains('active')) return;
 
-            const isBomb = Math.random() > 0.8;
-            const card = document.createElement('div');
-            card.className = isBomb ? 'bomb' : 'wbc';
+            const rand = Math.random();
+            let type = 'wbc';
+            let icon = '⚪';
             
-            // Random horizontal position
-            card.style.left = (Math.random() * 70 + 15) + 'vw';
-            card.style.top = '-100px';
-            card.innerHTML = isBomb ? '💣' : '🛡️';
-            container.appendChild(card);
+            if(rand > 0.85) { type = 'bomb'; icon = '💣'; }
+            else if(rand > 0.65) { type = 'info-card'; icon = '🛡️'; }
 
-            let posY = -100;
-            // SLOWER SPEED: 3 to 5 pixels per frame instead of 6+
-            const speed = 3 + (state.currentLevel * 0.5);
-            
-            const move = setInterval(() => {
-                if(state.isGameOver) {
-                    clearInterval(move);
-                    card.remove();
-                    return;
-                }
-                posY += speed;
-                card.style.top = posY + 'px';
-                
-                if(posY > window.innerHeight) {
-                    clearInterval(move);
-                    card.remove();
-                }
+            const el = document.createElement('div');
+            el.className = `falling-item ${type}`;
+            el.style.left = (Math.random() * 75 + 12.5) + 'vw';
+            el.style.top = '-80px';
+            el.innerHTML = icon;
+            container.appendChild(el);
+
+            let pos = -80;
+            const speed = 3.5;
+            const anim = setInterval(() => {
+                pos += speed;
+                el.style.top = pos + 'px';
+                if(pos > window.innerHeight) { clearInterval(anim); el.remove(); }
             }, 25);
 
-            // Improved hit detection for touch and mouse
-            const handleHit = (e) => {
+            const hit = (e) => {
                 e.preventDefault();
-                e.stopPropagation();
-                playSound('click-sound');
-                if(isBomb) {
-                    state.ammo = Math.max(0, state.ammo - 10);
-                } else {
-                    state.ammo += 5;
-                }
+                if(type === 'wbc') state.ammo += 1;
+                else if(type === 'info-card') state.ammo += 10;
+                else if(type === 'bomb') state.ammo = Math.max(0, state.ammo - 15);
+                
                 document.getElementById('ammo-count').innerText = state.ammo;
-                clearInterval(move);
-                card.remove();
+                clearInterval(anim);
+                el.remove();
             };
-
-            card.addEventListener('mousedown', handleHit);
-            card.addEventListener('touchstart', handleHit, {passive: false});
+            el.addEventListener('mousedown', hit);
+            el.addEventListener('touchstart', hit);
         }
 
-        function startBossBattle() {
+        function startBoss() {
             switchScene('scene-boss');
             const grid = document.getElementById('fort-grid');
             grid.innerHTML = '';
-            
             for(let i=0; i<20; i++) {
-                const brick = document.createElement('div');
-                brick.style = "width:70px; height:50px; background:linear-gradient(#8b0000, #4a0000); border:2px solid gold; cursor:pointer; display:flex; justify-content:center; align-items:center; border-radius:5px;";
-                brick.innerHTML = "🧱";
-                brick.onclick = (e) => {
-                    if(state.ammo >= 2) {
-                        playSound('click-sound');
-                        state.ammo -= 2;
+                const b = document.createElement('div');
+                b.className = 'brick';
+                b.onclick = () => {
+                    if(state.ammo >= 5) {
+                        state.ammo -= 5;
                         document.getElementById('ammo-count').innerText = state.ammo;
-                        brick.style.visibility = 'hidden';
-                        checkBossWin();
+                        b.style.visibility = 'hidden';
+                        if(Array.from(grid.children).every(x => x.style.visibility === 'hidden')) win();
                     }
                 };
-                grid.appendChild(brick);
-            }
-
-            const timer = setInterval(() => {
-                state.bossTimer--;
-                document.getElementById('boss-timer').innerText = state.bossTimer;
-                if(state.bossTimer <= 0) {
-                    clearInterval(timer);
-                    if(!state.isGameOver) gameOver();
-                }
-            }, 1000);
-            state.activeIntervals.push(timer);
-        }
-
-        function checkBossWin() {
-            const bricks = Array.from(document.getElementById('fort-grid').children);
-            const visibleBricks = bricks.filter(b => b.style.visibility !== 'hidden');
-            if(visibleBricks.length === 0) {
-                state.isGameOver = true;
-                state.activeIntervals.forEach(clearInterval);
-                showFinalTruth();
+                grid.appendChild(b);
             }
         }
 
-        function showFinalTruth() {
+        function win() {
             document.getElementById('hud').style.display = 'none';
             switchScene('scene-truth');
             setTimeout(() => {
+                // إيقاف موسيقى الخلفية تدريجياً أو مباشرة عند مشهد الرسالة
+                document.getElementById('bg-music').pause();
+                
                 switchScene('scene-message');
-                typeMessage();
+                const text = "من القلب إلى أبطال العالم: عِشتم أصحاء، متفائلين، آمنين.. أنتم الأمل.";
+                const target = document.getElementById('typewriter-text');
+                let i = 0;
+                document.getElementById('final-sfx').play();
+                const type = setInterval(() => {
+                    if(i < text.length) { target.innerHTML += text[i++]; }
+                    else {
+                        clearInterval(type);
+                        setTimeout(() => {
+                            switchScene('scene-win');
+                            document.getElementById('vid-win').play();
+                        }, 4000);
+                    }
+                }, 100);
             }, 5000);
-        }
-
-        function typeMessage() {
-            const msg = "من القلب إلى أبطال العالم: عِشتم أصحاء، متفائلين، آمنين.. أنتم الأمل.";
-            const target = document.getElementById('typewriter-text');
-            let i = 0;
-            playSound('typing-sound', true);
-
-            function step() {
-                if(i < msg.length) {
-                    target.innerHTML += msg.charAt(i);
-                    i++;
-                    setTimeout(step, 100);
-                } else {
-                    stopSound('typing-sound');
-                    setTimeout(() => {
-                        switchScene('scene-win-video');
-                        document.getElementById('vid-win').play();
-                    }, 3000);
-                }
-            }
-            step();
-        }
-
-        function gameOver() {
-            state.isGameOver = true;
-            state.activeIntervals.forEach(clearInterval);
-            document.getElementById('hud').style.display = 'none';
-            switchScene('scene-lose');
         }
     </script>
 </body>
